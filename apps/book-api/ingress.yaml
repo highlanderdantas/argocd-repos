@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: book-api
+  labels:
+    app.service.name: book-api
+spec:
+  rules:
+    - host: book-api.kind.local
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: book-api-service
+                port:
+                  number: 80
+

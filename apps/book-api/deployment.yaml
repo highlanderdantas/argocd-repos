@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-api
+  labels:
+    app.service.name: book-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.service.name: book-api
+  template:
+    metadata:
+      name: book-api
+      labels:
+        app.service.name: book-api
+    spec:
+      containers:
+        - name: book-api
+          image: highdantas/book-manager
+          imagePullPolicy: Always
+          env:
+            - name: SERVER_PORT
+              value: "9090"
+          envFrom:
+            - secretRef:
+                name: book-secret
+          ports:
+            - containerPort: 9090
+              name: http-port
+          startupProbe:
+            httpGet:
+              port: http-port
+              path: /actuator/health
+            failureThreshold: 20
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              port: http-port
+              path: /actuator/health
+            failureThreshold: 3
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              port: http-port
+              path: /actuator/health
+            failureThreshold: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              ## 4 CORES = 4VPCU | 1 VPC = 1000m
+              cpu: 50m
+              memory: 200Mi
+            limits:
+              cpu: 400m
+              memory: 600Mi
+
+
+

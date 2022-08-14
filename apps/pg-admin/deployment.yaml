@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  labels:
+    app.service.name: pgadmin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.service.name: pgadmin
+  template:
+    metadata:
+      labels:
+        app.service.name: pgadmin
+    spec:
+      containers:
+        - name: pgadmin
+          image: dpage/pgadmin4:6.10
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: pg-admin-secret
+          ports:
+            - containerPort: 80
+              name: web
+              protocol: TCP
+      restartPolicy: Always

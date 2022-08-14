@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pg-db
+  labels:
+    app.service.name: postgres
+spec:
+  serviceName: pg-db
+  selector:
+    matchLabels:
+      app.service.name: postgres
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.service.name: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13-alpine
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: pg-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data/
+          ports:
+            - containerPort: 5432
+              name: tcp-port
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - 'psql -w -U $POSTGRES_USER -d $POSTGRES_DB  -h 127.0.0.1 -c "SELECT 1"'
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - 'psql -w -U $POSTGRES_USER -d $POSTGRES_DB  -h 127.0.0.1 -c "SELECT 1"'
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - su
+                  - -c
+                  - pg_ctl stop -D $PGDATA -m immediate
+                  - -s
+                  - /bin/sh
+                  - postgres
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: standard
