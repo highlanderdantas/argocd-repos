@@ -6,7 +6,7 @@ metadata:
     app.service.name: book-api
 spec:
   rules:
-    - host: book-api.kind.local
+    - host: book-api.learn.sankhya.com.br
       http:
         paths:
           - pathType: Prefix
