@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: book-api
-          image: highdantas/book-manager
+          image: highdantas/book-manager:v1
           imagePullPolicy: Always
           env:
             - name: SERVER_PORT
